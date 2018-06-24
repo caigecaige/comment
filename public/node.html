@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>基于区块链的留言板</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
+    <link rel="stylesheet" href="ydui.px.css">
+    <script src="jquery.min.js"></script>
+    <script src="vue.min.js"></script>
+    <script src="ydui.px.js"></script>
+</head>
+<body>
+<div id="app">
+    <template>
+        <yd-navbar title="节点信息"></yd-navbar>
+    </template>
+    <template>
+    </template>
+    <template>
+        <yd-cell-group>
+            <yd-cell-item>
+                <span slot="left">IP：</span>
+                <span slot="right">{{node.ip}}</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left">Network Id：</span>
+                <span slot="right">{{node.networkId}}</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left">Block Number：</span>
+                <span slot="right">{{node.blockNumber}}</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left">Pending Transaction：</span>
+                <span slot="right">{{node.pendingTransaction}}</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left">Block GasLimit：</span>
+                <span slot="right">{{node.blockGasLimit}}</span>
+            </yd-cell-item>
+            <yd-cell-item>
+                <span slot="left">Header Time：</span>
+                <span slot="right">{{node.headerTime}}</span>
+            </yd-cell-item>
+        </yd-cell-group>
+    </template>
+    <template>
+        <yd-tabbar fixed="true">
+            <yd-tabbar-item title="留言记录" link="javascript:void(0)" @click.native="go('index.html')">
+                <yd-icon name="type" slot="icon" ></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="我要留言" link="javascript:void(0);" @click.native="go('set.html')">
+                <yd-icon name="compose" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="节点信息" link="" active>
+                <yd-icon name="location" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+        </yd-tabbar>
+    </template>
+</div>
+</body>
+<script>
+function getNode(){
+    $.get('/comment/node',{},function(res){
+        vm.node = res.data;
+    },'json').fail(function(){
+        vm.$dialog.notify({
+            mes: '更新数据失败!',
+            timeout: 2000,
+            onclose:function(){
+
+            }
+        });
+    });
+}
+    var vm = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                node:{ip:'',networkId:'',blockNumber:'',pendingTransaction:'',blockGasLimit:''}
+            }
+        },
+        methods:{
+            go:function(link){
+                location.href = link;
+            }
+        },
+        watch:{
+
+        },
+        created:function(){
+            getNode();
+            setInterval(function(){
+                getNode();
+            },5000);
+        }
+    })
+</script>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>基于区块链的留言板</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
+    <link rel="stylesheet" href="ydui.px.css">
+    <script src="jquery.min.js"></script>
+    <script src="vue.min.js"></script>
+    <script src="ydui.px.js"></script>
+</head>
+<body>
+<div id="app">
+<yd-layout>
+    <template>
+        <yd-navbar title="基于区块链的留言板" slot="navbar"></yd-navbar>
+    </template>
+    <template>
+        <yd-grids-group :rows="2">
+            <yd-grids-item>
+                <span slot="text">当前区块:{{block.max}}</span>
+            </yd-grids-item>
+            <yd-grids-item>
+                <span slot="text">等待同步:{{block.pending}}</span>
+            </yd-grids-item>
+        </yd-grids-group>
+    </template>
+    <template>
+        <yd-cell-group title="数据列表">
+                <yd-cell-item arrow v-for="item in list" @click.native="view(item)">
+                <span slot="left">{{item.name}}:&nbsp{{item.message}}</span>
+                <span slot="right">查看</span>
+            </yd-cell-item>
+        </yd-cell-group>
+    </template>
+    <template>
+        <yd-tabbar fixed="true" slot="tabbar">
+            <yd-tabbar-item title="留言记录" link="javascript:void(0)" active>
+                <yd-icon name="type" slot="icon" ></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="我要留言" link="" @click.native="go('set.html')">
+                <yd-icon name="compose" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="节点信息" link="" @click.native="go('node.html')">
+                <yd-icon name="location" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+        </yd-tabbar>
+    </template>
+    <yd-actionsheet :items="actionItem" v-model="showAction"></yd-actionsheet>
+</yd-layout>
+</div>
+</body>
+<script>
+function getList(skip){
+    $.get('/comment/list',{skip:skip,limit:20},function(res){
+        vm.block = res.data.block;
+        vm.list = res.data.list;
+    },'json').fail(function(){
+            vm.$dialog.notify({
+                mes: '更新数据失败!',
+                timeout: 2000,
+                onclose:function(){
+
+                }
+            });
+    });
+}
+var vm = new Vue({
+    el: '#app',
+    data: function() {
+        return {
+            block:{max:0,pending:'',networkId:''},
+            list:[],
+            showAction:false,
+            actionItem:[],
+            skip:0
+        }
+    },
+    methods:{
+        go(link){
+            location.href = link;
+        },
+        view(item){
+            this.showAction = true;
+            this.actionItem = [
+                                {label:item.message},
+                                {label:"留言时间:"+item.add_time}
+                                ];
+        }
+    },
+    watch:{
+
+    },
+    created:function(){
+        getList(0);
+        setInterval(function(){
+            getList();
+        },5000);
+    }
+})
+</script>
+</html>

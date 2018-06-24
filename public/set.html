@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>基于区块链的留言板</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
+    <link rel="stylesheet" href="ydui.px.css">
+    <script src="jquery.min.js"></script>
+    <script src="vue.min.js"></script>
+    <script src="ydui.px.js"></script>
+</head>
+<body>
+<div id="app">
+    <template>
+        <yd-navbar title="提交留言"></yd-navbar>
+    </template>
+<template>
+</template>
+    <template>
+        <yd-cell-group>
+            <yd-cell-item>
+                <span slot="left">名称：</span>
+                <input slot="right" type="text" v-model="user.name" placeholder="请填写名称">
+            </yd-cell-item>
+        </yd-cell-group>
+        <yd-cell-group title="留言">
+            <yd-cell-item>
+                <yd-textarea slot="right" v-model="user.message" placeholder="请输入留言" maxlength="100"></yd-textarea>
+            </yd-cell-item>
+        </yd-cell-group>
+        <yd-button-group>
+            <yd-button size="large" type="primary" @click.native="save">保存</yd-button>
+        </yd-button-group>
+        <yd-button-group>
+            <yd-cell-item>
+                <span slot="left">注意:提交后需要等待同步到区块链</span>
+            </yd-cell-item>
+        </yd-button-group>
+    </template>
+    <template>
+        <yd-tabbar fixed="true">
+            <yd-tabbar-item title="留言记录" link="javascript:void(0)" @click.native="go('index.html')">
+                <yd-icon name="type" slot="icon" ></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="我要留言" link="javascript:void(0);" active>
+                <yd-icon name="compose" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+            <yd-tabbar-item title="节点信息" link="" @click.native="go('node.html')">
+                <yd-icon name="location" slot="icon"></yd-icon>
+            </yd-tabbar-item>
+        </yd-tabbar>
+    </template>
+</div>
+</body>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                user:{name:'',message:''}
+            }
+        },
+        methods:{
+            save:function(){
+                if(this.user.name=="" || this.user.day==""){
+                    this.$dialog.toast({
+                        mes: '名称与留言都不能为空',
+                        timeout: 1500,
+                        icon: 'error'
+                    });
+                    return false;
+                }
+                this.$dialog.loading.open('提交中...');
+                $.post('/comment/set',vm.user,function(res){
+                    vm.$dialog.loading.close();
+                    if(res.code=='1000'){
+                        vm.$dialog.toast({
+                            mes: '保存成功',
+                            timeout: 1500,
+                            icon: 'success',
+                            callback:function(){
+                                location.href = 'index.html';
+                            }
+                        });
+                    }else{
+                        vm.$dialog.toast({
+                            mes: res.msg,
+                            timeout: 1500,
+                            icon: 'error'
+                        });
+                    }
+
+                },'json').fail(function(){
+                    vm.$dialog.toast({
+                        mes: '提交出错',
+                        timeout: 1500,
+                        icon: 'error'
+                    });
+                    vm.$dialog.loading.close();
+                });
+            },
+            go:function(link){
+                location.href = link;
+            }
+        },
+        watch:{
+
+        },
+        created:function(){
+        }
+    })
+</script>
+</html>
