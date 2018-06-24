@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"time"
 
-	"birthday/constant"
-	"birthday/form"
-	"birthday/token"
 	"caige/componnet"
+	"comment/constant"
+	"comment/form"
+	"comment/token"
 
 	"github.com/Unknwon/goconfig"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"

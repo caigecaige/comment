@@ -2,8 +2,8 @@
 package core
 
 import (
-	"birthday/form"
-	"birthday/handler"
+	"comment/form"
+	"comment/handler"
 
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"

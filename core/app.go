@@ -14,11 +14,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"birthday/constant"
-	"birthday/job"
 	"caige/componnet"
 	"caige/database"
 	"caige/schedule-service"
+	"comment/constant"
+	"comment/job"
 
 	"github.com/Unknwon/goconfig"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -45,7 +45,7 @@ type appServe struct {
 
 func NewApp() *appServe {
 	app := new(appServe)
-	app.Name = "birthday-dapp"
+	app.Name = "comment-dapp"
 	return app
 }
 

@@ -1,3 +1,3 @@
 package constant
 
-const ConfigContractKey = "birthday_config"
+const ConfigContractKey = "comment_config"
