@@ -3,6 +3,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -62,7 +63,7 @@ func (app *appServe) Init(configFile string) {
 func (app *appServe) checRuntime() {
 	app.ConfigHandler, app.Error = goconfig.LoadConfigFile(app.configFile)
 	if app.Error != nil {
-		app.End()
+		app.End("check config fail")
 	}
 }
 
@@ -98,7 +99,7 @@ func (app *appServe) setupDb() {
 		connectErr := app.MysqlEngine.TryConnect()
 		if connectErr != nil {
 			app.Error = connectErr
-			app.End()
+			app.End("connect to mysql fail")
 		}
 		//注入mysql实例
 		CDatabase.RegisterMysqlEngine(app.MysqlEngine.Engine, app.LogHandler.SqlHandler, core.LOG_DEBUG)
@@ -116,7 +117,7 @@ func (app *appServe) setupDb() {
 		mongoConnErr := app.MongoEngine.TryConnect()
 		if mongoConnErr != nil {
 			app.Error = mongoConnErr
-			app.End()
+			app.End("connect to mongodb fail")
 		}
 		mgLogger := log.New(app.LogHandler.SqlHandler, "[mongo] ", log.Ldate|log.Ltime|log.Llongfile)
 		CDatabase.RegisterMongoEngine(app.MongoEngine.Engine.DB(mongoSection["dbname"]), mgLogger, true)
@@ -181,11 +182,16 @@ func (app *appServe) Deployment() {
 func (app *appServe) ConnectGethRpc() {
 	client, dialErr := rpc.Dial("http://localhost:8545")
 	if dialErr != nil {
-		panic(dialErr)
+		app.Error = dialErr
+		app.End("connect to geth rpc fail")
 	}
 	app.LogHandler.Println(componnet.LOG_TYPE_SERVICE, "连接geth host...")
 	conn := ethclient.NewClient(client)
-	network, _ := conn.NetworkID(context.TODO())
+	network, getIdErr := conn.NetworkID(context.TODO())
+	if getIdErr != nil {
+		app.Error = getIdErr
+		app.End("get geth network id fail")
+	}
 	app.LogHandler.Println(componnet.LOG_TYPE_SERVICE, "geth host:"+network.String())
 	app.Engine.Map(conn)
 }
@@ -194,17 +200,20 @@ func (app *appServe) ConnectGethRpc() {
 func (app *appServe) CreateGethAuth() {
 	keyStore := app.ConfigHandler.MustValue("geth", "keystore")
 	if keyStore == "" {
-		panic("not found key store file")
+		app.Error = errors.New("keystore config miss")
+		app.End("get keystore config val")
 	}
 	keyStoreContent, readErr := ioutil.ReadFile(keyStore)
 	if readErr != nil {
-		panic("read key store file error:" + readErr.Error())
+		app.Error = readErr
+		app.End("read keystore file fail")
 	}
 	key := string(keyStoreContent)
 	pw := app.ConfigHandler.MustValue("geth", "pass")
 	auth, err := bind.NewTransactor(strings.NewReader(key), pw)
 	if err != nil {
-		panic(err)
+		app.Error = err
+		app.End("create geth auth fail")
 	}
 	app.Engine.Map(auth)
 }
@@ -219,12 +228,7 @@ func (app *appServe) Run() {
 }
 
 //结束app
-func (app *appServe) End() {
-	if app.LogHandler != nil {
-		app.LogHandler.Println(componnet.LOG_TYPE_SERVICE, "系统发生错误:")
-		app.LogHandler.Println(componnet.LOG_TYPE_SERVICE, app.Error)
-	} else {
-		fmt.Println("错误:" + app.Error.Error())
-	}
+func (app *appServe) End(tag string) {
+	fmt.Println("Error!" + tag + ":" + app.Error.Error())
 	os.Exit(1)
 }
